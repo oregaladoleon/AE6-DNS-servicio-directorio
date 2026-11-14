@@ -1,0 +1,122 @@
+=== 1. named-checkconf ===
+OK
+
+=== 2. named-checkzone ===
+zone dpl.local/IN: loaded serial 2024110504
+OK
+
+=== 3. dig / nslookup / host ===
+--- nslookup www.dpl.local ---
+Server:		172.19.0.3
+Address:	172.19.0.3#53
+
+Name:	www.dpl.local
+Address: 172.18.0.3
+
+--- dig app.dpl.local ---
+app.dpl.local.		3600	IN	A	172.18.0.2
+
+--- host -t a / host -t ns ---
+app.dpl.local has address 172.18.0.2
+dpl.local name server ns1.dpl.local.
+
+=== 4. ping ===
+PING www.dpl.local (172.18.0.3) 56(84) bytes of data.
+64 bytes from 172.18.0.3: icmp_seq=1 ttl=64 time=0.085 ms
+64 bytes from 172.18.0.3: icmp_seq=2 ttl=64 time=0.197 ms
+64 bytes from 172.18.0.3: icmp_seq=3 ttl=64 time=0.249 ms
+
+--- www.dpl.local ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2040ms
+rtt min/avg/max/mdev = 0.085/0.177/0.249/0.068 ms
+
+=== 5. curl ===
+--- curl -I http://www.dpl.local ---
+HTTP/1.1 200 OK
+Server: nginx/1.27.5
+Date: Sat, 14 Nov 2026 22:17:56 GMT
+Content-Type: text/html; charset=utf-8
+Connection: keep-alive
+
+
+--- curl app.dpl.local:8000/api/mensaje ---
+{"mensaje": "Hola desde el servidor de aplicaciones DPL (UT4)", "hostname": "4657d88d51b6", "fecha": "2026-11-14T23:17:56"}
+
+=== 6. ldapwhoami (correcta e incorrecta) ===
+--- Correcta ---
+dn:uid=alumno,ou=usuarios,dc=dpl,dc=local
+
+--- Incorrecta (Debe fallar con error 49) ---
+ldap_bind: Invalid credentials (49)
+Fallo capturado correctamente (Código 49)
+
+=== 7. ldapsearch ===
+dn: uid=alumno,ou=usuarios,dc=dpl,dc=local
+objectClass: inetOrgPerson
+uid: alumno
+cn: alumno
+sn: Alumno DPL
+mail: alumno@dpl.local
+
+=== 8. slapcat ===
+dn: dc=dpl,dc=local
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: DPL
+dc: dpl
+structuralObjectClass: organization
+entryUUID: 4dfe69cc-722e-1041-9e27-43305a4c09cf
+creatorsName: cn=admin,dc=dpl,dc=local
+createTimestamp: 20261111151416Z
+entryCSN: 20261111151416.377335Z#000000#000#000000
+modifiersName: cn=admin,dc=dpl,dc=local
+modifyTimestamp: 20261111151416Z
+
+dn: ou=usuarios,dc=dpl,dc=local
+objectClass: organizationalUnit
+ou: usuarios
+structuralObjectClass: organizationalUnit
+entryUUID: 7bc90148-7231-1041-946a-8b675d88e0ab
+creatorsName: cn=admin,dc=dpl,dc=local
+createTimestamp: 20261111153701Z
+entryCSN: 20261111153701.692701Z#000000#000#000000
+modifiersName: cn=admin,dc=dpl,dc=local
+modifyTimestamp: 20261111153701Z
+
+dn: uid=alumno,ou=usuarios,dc=dpl,dc=local
+objectClass: inetOrgPerson
+uid: alumno
+cn: alumno
+sn: Alumno DPL
+mail: alumno@dpl.local
+userPassword:: Q0FNQklBUl9FU1RP
+structuralObjectClass: inetOrgPerson
+entryUUID: 7bca9850-7231-1041-946b-8b675d88e0ab
+creatorsName: cn=admin,dc=dpl,dc=local
+createTimestamp: 20261111153701Z
+entryCSN: 20261111153701.703140Z#000000#000#000000
+modifiersName: cn=admin,dc=dpl,dc=local
+modifyTimestamp: 20261111153701Z
+
+dn: uid=maria,ou=usuarios,dc=dpl,dc=local
+objectClass: inetOrgPerson
+uid: maria
+cn: maria
+sn: Maria DPL
+mail: maria@dpl.local
+userPassword:: Q0FNQklBUl9FU1RP
+structuralObjectClass: inetOrgPerson
+entryUUID: 7bcb6fe6-7231-1041-946c-8b675d88e0ab
+creatorsName: cn=admin,dc=dpl,dc=local
+createTimestamp: 20261111153701Z
+entryCSN: 20261111153701.708660Z#000000#000#000000
+modifiersName: cn=admin,dc=dpl,dc=local
+modifyTimestamp: 20261111153701Z
+
+=== 9. Login de la aplicación (/api/login) ===
+--- Válido (200 OK) ---
+{"autenticado": true, "usuario": "alumno", "perfil": {"cn": "alumno", "mail": "alumno@dpl.local"}}
+
+--- Inválido (401 Unauthorized) ---
+401
